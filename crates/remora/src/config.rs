@@ -86,9 +86,10 @@ impl Default for ValidatorConfig {
 impl ImportExport for ValidatorConfig {}
 
 /// The workload type to generate.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub enum WorkloadType {
     Transfers,
+    SharedObjects,
 }
 
 /// The configuration for the benchmark.

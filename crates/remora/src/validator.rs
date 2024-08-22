@@ -53,6 +53,7 @@ impl SingleMachineValidator {
         for i in 0..config.num_proxies {
             let (tx, rx) = mpsc::channel(DEFAULT_CHANNEL_SIZE);
             let store = executor.create_in_memory_store();
+            let _ = executor.load_state_for_shared_objects().await;
             let proxy = Proxy::new(i, executor.clone(), store, rx, tx_proxy_results.clone());
             handles.push(proxy.spawn());
             proxy_senders.push(tx);
@@ -70,6 +71,7 @@ impl SingleMachineValidator {
 
         // Boot the primary executor.
         let store = executor.create_in_memory_store();
+        let _ = executor.load_state_for_shared_objects().await;
         let primary_handle =
             PrimaryExecutor::new(executor, store, rx_commits, rx_proxy_results, tx_output).spawn();
         handles.push(primary_handle);

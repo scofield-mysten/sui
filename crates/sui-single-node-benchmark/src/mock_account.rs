@@ -6,13 +6,14 @@ use std::{collections::BTreeMap, sync::Arc};
 use fastcrypto::ed25519::Ed25519KeyPair;
 use futures::stream::FuturesUnordered;
 use rand::{rngs::StdRng, SeedableRng};
+use serde::{Deserialize, Serialize};
 use sui_types::{
     base_types::{ObjectID, ObjectRef, SuiAddress, SUI_ADDRESS_LENGTH},
     crypto::{get_key_pair_from_rng, AccountKeyPair},
     object::Object,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Account {
     pub sender: SuiAddress,
     pub keypair: Arc<AccountKeyPair>,

@@ -76,6 +76,10 @@ impl BenchmarkContext {
         self.validator.clone()
     }
 
+    pub fn get_accounts(&self) -> &BTreeMap<SuiAddress, Account> {
+        &self.user_accounts
+    }
+
     pub(crate) async fn publish_package(&mut self, publish_data: PublishData) -> ObjectRef {
         let mut gas_objects = self.admin_account.gas_objects.deref().clone();
         let (package, updated_gas) = self

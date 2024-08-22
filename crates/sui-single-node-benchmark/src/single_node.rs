@@ -180,7 +180,10 @@ impl SingleValidator {
                     .into_inner();
                 response.signed_effects.into_data()
             }
-            Component::TxnSigning | Component::CheckpointExecutor | Component::ExecutionOnly | Component::PipeTxsToChannel => {
+            Component::TxnSigning
+            | Component::CheckpointExecutor
+            | Component::ExecutionOnly
+            | Component::PipeTxsToChannel => {
                 unreachable!()
             }
         };
@@ -298,10 +301,7 @@ impl SingleValidator {
         InMemoryObjectStore::new(objects)
     }
 
-    pub(crate) async fn assigned_shared_object_versions(
-        &self,
-        transactions: &[CertifiedTransaction],
-    ) {
+    pub async fn assigned_shared_object_versions(&self, transactions: &[CertifiedTransaction]) {
         let transactions: Vec<_> = transactions
             .iter()
             .map(|tx| {

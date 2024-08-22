@@ -7,6 +7,7 @@ use anyhow::Context;
 use clap::Parser;
 use remora::{
     config::{BenchmarkConfig, ImportExport, ValidatorConfig},
+    executor::{import_from_files, LOG_DIR},
     load_generator::LoadGenerator,
     metrics::Metrics,
 };
@@ -49,10 +50,15 @@ async fn main() -> anyhow::Result<()> {
         validator_config.validator_address,
         metrics,
     );
-    let transactions = load_generator.initialize().await;
+    let working_directory = LOG_DIR;
+    // import txs to assign shared-object versions
+    let (_, read_txs) = import_from_files(working_directory.into());
+
+    //let transactions = load_generator.initialize().await;
 
     // Submit transactions to the server.
-    load_generator.run(transactions).await;
+    //load_generator.run(transactions).await;
+    load_generator.run(read_txs).await;
 
     Ok(())
 }
