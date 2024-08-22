@@ -86,6 +86,16 @@ module move_benchmark::benchmark {
         transfer::share_object(counter);
     }
 
+    public entry fun create_counter(ctx: &mut TxContext) {
+        transfer::transfer(
+            SharedCounter {
+                id: object::new(ctx),
+                count: 0,
+            },
+            tx_context::sender(ctx),
+        )
+    }
+
     public fun increment_shared_counter(counter: &mut SharedCounter) {
         counter.count = counter.count + 1;
     }

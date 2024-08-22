@@ -15,6 +15,9 @@ use sui_single_node_benchmark::{
 async fn benchmark_non_move_transactions_smoke_test() {
     for skip_signing in [true, false] {
         for component in Component::iter() {
+            if let Component::PipeTxsToChannel = component {
+                continue;
+            }
             run_benchmark(
                 Workload::new(
                     10,
@@ -44,6 +47,9 @@ async fn benchmark_non_move_transactions_smoke_test() {
 async fn benchmark_move_transactions_smoke_test() {
     for skip_signing in [true, false] {
         for component in Component::iter() {
+            if let Component::PipeTxsToChannel = component {
+                continue;
+            }
             run_benchmark(
                 Workload::new(
                     10,
@@ -70,9 +76,32 @@ async fn benchmark_move_transactions_smoke_test() {
 }
 
 #[sim_test]
+async fn benchmark_counter_transactions_smoke_test() {
+    for skip_signing in [true, false] {
+        for component in Component::iter() {
+            if let Component::PipeTxsToChannel = component {
+                continue;
+            }
+            run_benchmark(
+                Workload::new(10, WorkloadKind::Counter { txs_per_counter: 1 }),
+                component,
+                1000,
+                false,
+                skip_signing,
+                None,
+            )
+            .await;
+        }
+    }
+}
+
+#[sim_test]
 async fn benchmark_batch_mint_smoke_test() {
     for skip_signing in [true, false] {
         for component in Component::iter() {
+            if let Component::PipeTxsToChannel = component {
+                continue;
+            }
             run_benchmark(
                 Workload::new(
                     10,
@@ -109,6 +138,9 @@ async fn benchmark_publish_from_source() {
         "manifest.json",
     ]);
     for component in Component::iter() {
+        if let Component::PipeTxsToChannel = component {
+            continue;
+        }
         run_benchmark(
             Workload::new(
                 10,
@@ -137,6 +169,9 @@ async fn benchmark_publish_from_bytecode() {
         "manifest.json",
     ]);
     for component in Component::iter() {
+        if let Component::PipeTxsToChannel = component {
+            continue;
+        }
         run_benchmark(
             Workload::new(
                 10,

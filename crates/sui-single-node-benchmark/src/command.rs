@@ -148,6 +148,14 @@ pub enum WorkloadKind {
         )]
         manifest_file: PathBuf,
     },
+    Counter {
+        #[arg(
+            long,
+            default_value_t = 1,
+            help = "Number of times each counter is incremented (a measure of contention)."
+        )]
+        txs_per_counter: u64,
+    },
 }
 
 impl WorkloadKind {
@@ -157,6 +165,7 @@ impl WorkloadKind {
             WorkloadKind::NoMove => 1,
             WorkloadKind::PTB { num_transfers, .. } => *num_transfers + 1,
             WorkloadKind::Publish { .. } => 1,
+            WorkloadKind::Counter { txs_per_counter } => *txs_per_counter,
         }
     }
 }

@@ -90,14 +90,14 @@ impl PackagePublishTxGenerator {
 }
 
 impl TxGenerator for PackagePublishTxGenerator {
-    fn generate_tx(&self, account: Account) -> Transaction {
-        TestTransactionBuilder::new(
+    fn generate_txs(&self, account: Account) -> Vec<Transaction> {
+        vec![TestTransactionBuilder::new(
             account.sender,
             account.gas_objects[0],
             DEFAULT_VALIDATOR_GAS_PRICE,
         )
         .publish_with_data(PublishData::CompiledPackage(self.compiled_package.clone()))
-        .build_and_sign(account.keypair.as_ref())
+        .build_and_sign(account.keypair.as_ref())]
     }
 
     fn name(&self) -> &'static str {

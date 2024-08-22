@@ -49,7 +49,7 @@ impl MoveTxGenerator {
 }
 
 impl TxGenerator for MoveTxGenerator {
-    fn generate_tx(&self, account: Account) -> Transaction {
+    fn generate_txs(&self, account: Account) -> Vec<Transaction> {
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
             // Step 1: transfer `num_transfers` objects.
@@ -155,13 +155,13 @@ impl TxGenerator for MoveTxGenerator {
             }
             builder.finish()
         };
-        TestTransactionBuilder::new(
+        vec![TestTransactionBuilder::new(
             account.sender,
             account.gas_objects[0],
             DEFAULT_VALIDATOR_GAS_PRICE,
         )
         .programmable(pt)
-        .build_and_sign(account.keypair.as_ref())
+        .build_and_sign(account.keypair.as_ref())]
     }
 
     fn name(&self) -> &'static str {
