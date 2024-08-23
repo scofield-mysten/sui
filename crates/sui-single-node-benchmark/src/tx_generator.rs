@@ -9,7 +9,6 @@ pub use root_object_create_tx_generator::RootObjectCreateTxGenerator;
 pub use shared_object_create_tx_generator::SharedObjectCreateTxGenerator;
 use sui_types::transaction::Transaction;
 
-pub mod counter_create_tx_generator;
 pub mod counter_tx_generator;
 mod move_tx_generator;
 pub mod non_move_tx_generator;

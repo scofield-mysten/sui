@@ -83,7 +83,12 @@ async fn benchmark_counter_transactions_smoke_test() {
                 continue;
             }
             run_benchmark(
-                Workload::new(10, WorkloadKind::Counter { txs_per_counter: 1 }),
+                Workload::new(
+                    100,
+                    WorkloadKind::Counter {
+                        txs_per_counter: 10,
+                    },
+                ),
                 component,
                 1000,
                 false,

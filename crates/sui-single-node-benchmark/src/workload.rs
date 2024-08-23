@@ -1,5 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+use std::collections::HashMap;
 
 use crate::benchmark_context::BenchmarkContext;
 use crate::command::WorkloadKind;
@@ -10,6 +11,7 @@ use crate::tx_generator::{
 use std::path::PathBuf;
 use std::sync::Arc;
 use sui_test_transaction_builder::PublishData;
+use sui_types::base_types::SuiAddress;
 
 #[derive(Clone)]
 pub struct Workload {
@@ -79,10 +81,22 @@ impl Workload {
                 let move_package = ctx.publish_package(PublishData::Source(path, false)).await;
 
                 // generate counter objects
-                let counter_objects = ctx.preparing_counter_objects(move_package.0).await;
+                let counter_objects = ctx
+                    .prepare_shared_objects(move_package.0, self.num_accounts() as usize)
+                    .await;
+
+                let mut account_orders: HashMap<SuiAddress, usize> = HashMap::new();
+
+                // Iterate over the values and assign a unique index to each
+                for (idx, value) in ctx.get_accounts().keys().enumerate() {
+                    account_orders.insert(*value, idx);
+                }
+                println!("finish preparing shared objects {}", counter_objects.len());
+
                 Arc::new(CounterTxGenerator::new(
                     move_package.0,
                     counter_objects,
+                    account_orders,
                     *txs_per_counter,
                 ))
             }

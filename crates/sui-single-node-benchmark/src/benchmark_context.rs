@@ -25,10 +25,7 @@ use crate::{
     mock_account::{batch_create_account_and_gas, Account},
     mock_storage::InMemoryObjectStore,
     single_node::SingleValidator,
-    tx_generator::{
-        counter_create_tx_generator::CounterCreateTxGenerator, RootObjectCreateTxGenerator,
-        SharedObjectCreateTxGenerator, TxGenerator,
-    },
+    tx_generator::{RootObjectCreateTxGenerator, SharedObjectCreateTxGenerator, TxGenerator},
     workload::Workload,
 };
 
@@ -171,8 +168,7 @@ impl BenchmarkContext {
             .user_accounts
             .values()
             .take(num_shared_objects)
-            .map(|account| generator.generate_txs(account.clone()))
-            .flatten()
+            .flat_map(|account| generator.generate_txs(account.clone()))
             .collect();
         let results = self
             .execute_raw_transactions(shared_object_create_transactions)
@@ -211,40 +207,6 @@ impl BenchmarkContext {
         shared_objects
     }
 
-    pub(crate) async fn preparing_counter_objects(
-        &mut self,
-        move_package: ObjectID,
-    ) -> HashMap<SuiAddress, ObjectRef> {
-        let mut counter_objects = HashMap::new();
-        info!("Preparing counters");
-        let counters_create_transactions = self
-            .generate_transactions(Arc::new(CounterCreateTxGenerator::new(move_package)))
-            .await;
-        let results = self
-            .execute_raw_transactions(counters_create_transactions)
-            .await;
-        let mut new_gas_objects = HashMap::new();
-        for effects in results {
-            let (owner, counter_object) = effects
-                .created()
-                .into_iter()
-                .filter_map(|(oref, owner)| {
-                    owner
-                        .get_address_owner_address()
-                        .ok()
-                        .map(|owner| (owner, oref))
-                })
-                .next()
-                .unwrap();
-            counter_objects.insert(owner, counter_object);
-            let gas_object = effects.gas_object().0;
-            new_gas_objects.insert(gas_object.0, gas_object);
-        }
-        self.refresh_gas_objects(new_gas_objects);
-        info!("Finished preparing counters");
-        counter_objects
-    }
-
     pub async fn generate_transactions(
         &self,
         tx_generator: Arc<dyn TxGenerator>,
@@ -264,7 +226,7 @@ impl BenchmarkContext {
             })
             .collect();
         let results: Vec<_> = tasks.collect().await;
-        results.into_iter().map(|r| r.unwrap()).flatten().collect()
+        results.into_iter().flat_map(|r| r.unwrap()).collect()
     }
 
     pub async fn certify_transactions(
