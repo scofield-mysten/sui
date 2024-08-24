@@ -9,7 +9,10 @@ use tokio::{
 };
 
 use crate::{
-    executor::api::{ExecutionEffects, Executor, TransactionWithTimestamp},
+    executor::{
+        api::{ExecutableTransaction, ExecutionEffects, Executor, TransactionWithTimestamp},
+        dependency_controller::DependencyController,
+    },
     metrics::Metrics,
 };
 
@@ -27,6 +30,8 @@ pub struct ProxyCore<E: Executor> {
     rx_transactions: Receiver<TransactionWithTimestamp<E::Transaction>>,
     /// The sender for transactions with results.
     tx_results: Sender<ExecutionEffects<E::StateChanges>>,
+    /// The dependency controller for multi-core tx execution.
+    dependency_controller: DependencyController,
     /// The  metrics for the proxy
     metrics: Arc<Metrics>,
 }
@@ -47,6 +52,7 @@ impl<E: Executor> ProxyCore<E> {
             store: Arc::new(store),
             rx_transactions,
             tx_results,
+            dependency_controller: DependencyController::new(),
             metrics,
         }
     }
@@ -70,10 +76,29 @@ impl<E: Executor> ProxyCore<E> {
     {
         tracing::info!("Proxy {} started", self.id);
 
+        let mut task_id = 0;
+        let ctx = self.executor.get_context();
         while let Some(transaction) = self.rx_transactions.recv().await {
             self.metrics.increase_proxy_load(&self.id);
+            let metrics = self.metrics.clone();
+            tokio::spawn(async move {
+                for prior_notify in prior_handles {
+                    prior_notify.notified().await;
+                }
+
+                let execution_result = E::exec_on_ctx(ctx, store, transaction).await;
+
+                for notify in current_handles {
+                    notify.notify_one();
+                }
+
+                if tx_results.send(execution_result).await.is_err() {
+                    tracing::warn!("Failed to send execution result, stopping proxy {id}");
+                    return;
+                }
+                metrics.decrease_proxy_load(&id);
+            });
             let execution_result = self.pre_execute(&transaction).await;
-            self.metrics.decrease_proxy_load(&self.id);
             if self.tx_results.send(execution_result).await.is_err() {
                 tracing::warn!(
                     "Failed to send execution result, stopping proxy {}",
