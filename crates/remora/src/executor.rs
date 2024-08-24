@@ -187,6 +187,7 @@ pub fn init_workload(config: &BenchmarkConfig) -> Workload {
             num_shared_objects: 1,
             nft_size: 32,
         },
+        WorkloadType::Contention => WorkloadKind::Counter { txs_per_counter: 2 },
     };
 
     // Create genesis.
@@ -197,7 +198,7 @@ pub fn init_workload(config: &BenchmarkConfig) -> Workload {
 pub async fn generate_transactions(config: &BenchmarkConfig) -> Vec<CertifiedTransaction> {
     tracing::debug!("Generating all transactions...");
     let workload = init_workload(config);
-    let mut ctx = BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, true).await;
+    let mut ctx = BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, false).await;
     let start_time = Instant::now();
     let tx_generator = workload.create_tx_generator(&mut ctx).await;
     let transactions = ctx.generate_transactions(tx_generator).await;
@@ -262,7 +263,7 @@ impl SuiExecutor {
         let workload = init_workload(config);
         let component = Component::PipeTxsToChannel;
         let start_time = Instant::now();
-        let mut ctx = BenchmarkContext::new(workload.clone(), component, true).await;
+        let mut ctx = BenchmarkContext::new(workload.clone(), component, false).await;
         let _ = workload.create_tx_generator(&mut ctx).await;
         let elapsed = start_time.elapsed();
         tracing::debug!(
@@ -511,6 +512,49 @@ mod tests {
         let workload = init_workload(&config);
         let mut ctx =
             BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, true).await;
+        let tx_generator = workload.create_tx_generator(&mut ctx).await;
+        let txs = ctx.generate_transactions(tx_generator).await;
+        let txs = ctx.certify_transactions(txs, false).await;
+
+        super::export_to_files(ctx.get_accounts(), &txs, working_directory.into());
+
+        // execute on another executor
+        let mut executor = SuiExecutor::new(&config).await;
+        let store = executor.create_in_memory_store();
+
+        // import txs to assign shared-object versions
+        let (read_accounts, read_txs) = super::import_from_files(working_directory.into());
+        assert_eq!(read_accounts.len(), ctx.get_accounts().len());
+        executor
+            .get_context()
+            .validator()
+            .assigned_shared_object_versions(&read_txs) // Important!!
+            .await;
+
+        for tx in read_txs {
+            let transaction = TransactionWithTimestamp::new_for_tests(tx);
+            let results = executor.execute(&store, &transaction).await;
+            assert!(results.success());
+        }
+    }
+
+    #[tokio::test]
+    async fn counter_workload_test_with_imported_file() {
+        let config = BenchmarkConfig {
+            workload: WorkloadType::Contention,
+            ..BenchmarkConfig::new_for_tests()
+        };
+
+        let working_directory = "/tmp/test_export";
+        fs::create_dir_all(&working_directory).expect(&format!(
+            "Failed to create directory '{}'",
+            working_directory
+        ));
+
+        // generate txs and export to files
+        let workload = init_workload(&config);
+        let mut ctx =
+            BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, false).await;
         let tx_generator = workload.create_tx_generator(&mut ctx).await;
         let txs = ctx.generate_transactions(tx_generator).await;
         let txs = ctx.certify_transactions(txs, false).await;

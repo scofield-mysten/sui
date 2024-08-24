@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
         Some(path) => BenchmarkConfig::load(path).context("Failed to load benchmark config")?,
         None => BenchmarkConfig::default(),
     };
-    assert_eq!(config.workload, WorkloadType::SharedObjects);
+    assert_eq!(config.workload, WorkloadType::Contention);
 
     let working_directory = LOG_DIR;
     fs::create_dir_all(&working_directory).expect(&format!(

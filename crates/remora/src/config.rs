@@ -90,6 +90,7 @@ impl ImportExport for ValidatorConfig {}
 pub enum WorkloadType {
     Transfers,
     SharedObjects,
+    Contention,
 }
 
 /// The configuration for the benchmark.

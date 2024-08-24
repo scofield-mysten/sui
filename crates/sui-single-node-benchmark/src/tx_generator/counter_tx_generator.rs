@@ -8,9 +8,7 @@ use crate::mock_account::Account;
 use sui_test_transaction_builder::TestTransactionBuilder;
 use sui_types::{
     base_types::{ObjectID, SequenceNumber, SuiAddress},
-    transaction::{
-        CallArg, ObjectArg, Transaction, TransactionDataAPI, DEFAULT_VALIDATOR_GAS_PRICE,
-    },
+    transaction::{CallArg, ObjectArg, Transaction, DEFAULT_VALIDATOR_GAS_PRICE},
 };
 
 pub struct CounterTxGenerator {
@@ -44,10 +42,6 @@ impl TxGenerator for CounterTxGenerator {
         let mut txs = Vec::with_capacity(self.txs_per_counter as usize);
 
         for i in 0..self.txs_per_counter {
-            println!(
-                "Generating phase - used gas object is {:?}",
-                account.gas_objects[i as usize]
-            );
             let tx = TestTransactionBuilder::new(
                 account.sender,
                 account.gas_objects[i as usize],
@@ -66,7 +60,6 @@ impl TxGenerator for CounterTxGenerator {
             .build_and_sign(account.keypair.as_ref());
 
             txs.push(tx.clone());
-            println!("generated - {:?}", tx.transaction_data().input_objects());
         }
         txs
     }

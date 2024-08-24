@@ -531,6 +531,8 @@ mod checked {
                 match object.owner {
                     Owner::AddressOwner(_) | Owner::ObjectOwner(_) | Owner::Immutable => {
                         // When someone locks an object as shared it must be shared already.
+                        println!("ŸOU ARE GREAT!");
+                        println!("{:?}", object);
                         return Err(UserInputError::NotSharedObjectError);
                     }
                     Owner::Shared {

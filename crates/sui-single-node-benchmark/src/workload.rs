@@ -91,7 +91,6 @@ impl Workload {
                 for (idx, value) in ctx.get_accounts().keys().enumerate() {
                     account_orders.insert(*value, idx);
                 }
-                println!("finish preparing shared objects {}", counter_objects.len());
 
                 Arc::new(CounterTxGenerator::new(
                     move_package.0,
