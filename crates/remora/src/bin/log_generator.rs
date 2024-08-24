@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
 
     // generate txs and export to files
     let workload = init_workload(&config);
-    let mut ctx = BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, true).await;
+    let mut ctx = BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, false).await;
     let tx_generator = workload.create_tx_generator(&mut ctx).await;
     let txs = ctx.generate_transactions(tx_generator).await;
     let txs = ctx.certify_transactions(txs, false).await;
