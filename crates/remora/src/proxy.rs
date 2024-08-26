@@ -69,10 +69,14 @@ impl<E: Executor> Proxy<E> {
                 .input_objects()
                 .into_iter()
                 .filter_map(|kind| {
-                    if let InputObjectKind::MovePackage(package_id) = kind {
-                        Some(package_id)
-                    } else {
-                        None
+                    match kind {
+                        InputObjectKind::ImmOrOwnedMoveObject((obj_id, _, _)) => Some(obj_id),
+                        InputObjectKind::SharedMoveObject {
+                            id: obj_id,
+                            initial_shared_version: _,
+                            mutable: _,
+                        } => Some(obj_id),
+                        _ => None, // filter out move package
                     }
                 })
                 .collect::<Vec<_>>();
