@@ -254,7 +254,7 @@ pub fn import_from_files(
     let accounts = bincode::deserialize_from(accounts_file).unwrap();
     let txs = bincode::deserialize_from(txs_file).unwrap();
     let elapsed = start_time.elapsed().as_millis() as f64;
-    println!("Import took {} ms", elapsed,);
+    tracing::debug!("Import took {} ms", elapsed);
     (accounts, txs)
 }
 
