@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use sui_types::transaction::InputObjectKind;
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
@@ -64,9 +65,21 @@ impl<E: Executor> Proxy<E> {
         let ctx = self.executor.get_context();
         while let Some(transaction) = self.rx_transactions.recv().await {
             task_id += 1;
+            let obj_ids = transaction
+                .input_objects()
+                .into_iter()
+                .filter_map(|kind| {
+                    if let InputObjectKind::MovePackage(package_id) = kind {
+                        Some(package_id)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
+
             let (prior_handles, current_handles) = self
                 .dependency_controller
-                .get_dependencies(task_id, transaction.input_object_ids());
+                .get_dependencies(task_id, obj_ids);
 
             let store = self.store.clone();
             let id = self.id;
