@@ -452,7 +452,7 @@ mod tests {
         let store = executor.create_in_memory_store();
 
         let transactions = generate_transactions(&config).await;
-        assert!(transactions.len() > 10);
+        assert!(transactions.len() == 10);
 
         for tx in transactions {
             let transaction = TransactionWithTimestamp::new_for_tests(tx);
@@ -502,7 +502,7 @@ mod tests {
             ..BenchmarkConfig::new_for_tests()
         };
 
-        let working_directory = "/tmp/test_export";
+        let working_directory = "/tmp/test_export_shared_object";
         fs::create_dir_all(&working_directory).expect(&format!(
             "Failed to create directory '{}'",
             working_directory
@@ -511,7 +511,7 @@ mod tests {
         // generate txs and export to files
         let workload = init_workload(&config);
         let mut ctx =
-            BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, true).await;
+            BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, false).await;
         let tx_generator = workload.create_tx_generator(&mut ctx).await;
         let txs = ctx.generate_transactions(tx_generator).await;
         let txs = ctx.certify_transactions(txs, false).await;
@@ -545,7 +545,7 @@ mod tests {
             ..BenchmarkConfig::new_for_tests()
         };
 
-        let working_directory = "/tmp/test_export";
+        let working_directory = "/tmp/test_export_counter";
         fs::create_dir_all(&working_directory).expect(&format!(
             "Failed to create directory '{}'",
             working_directory
