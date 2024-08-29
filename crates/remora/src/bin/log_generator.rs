@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use rand::{seq::SliceRandom, thread_rng};
 use std::{fs, path::PathBuf};
 
 use anyhow::Context;
@@ -42,7 +43,9 @@ async fn main() -> anyhow::Result<()> {
     let mut ctx = BenchmarkContext::new(workload.clone(), Component::PipeTxsToChannel, false).await;
     let tx_generator = workload.create_tx_generator(&mut ctx).await;
     let txs = ctx.generate_transactions(tx_generator).await;
-    let txs = ctx.certify_transactions(txs, false).await;
+    let mut txs = ctx.certify_transactions(txs, false).await;
+
+    txs.shuffle(&mut thread_rng());
 
     export_to_files(ctx.get_accounts(), &txs, working_directory.into());
 
